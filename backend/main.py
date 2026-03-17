@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import models
 from database import engine
 from routers import auth, papers
+import os
 
-# Database tables create karna (agar nahi hui hain)
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -13,24 +13,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Activity 6.3: CORS Configuration
-# Production mein yahan apna actual domain dalna (e.g., https://researchhub-ai.vercel.app)
-origins = [
-    "http://localhost:3000",
-    "http://localhost:5173", # Vite ka default port
-    "http://127.0.0.1:3000",
-    "http://0.0.0.0:8000",
-]
-
+# CORS (allow all for now)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"], # GET, POST, DELETE, etc. sab allow
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Routers Include karna
 app.include_router(auth.router)
 app.include_router(papers.router)
 
@@ -39,6 +30,12 @@ async def root():
     return {
         "status": "online",
         "message": "ResearchHub AI API is running",
-        "version"   : "1.0.0",
+        "version": "1.0.0",
         "agent": "Llama 3.3 70B Active"
     }
+
+# Render compatible run
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 10000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
